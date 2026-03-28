@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>采綾遊覽團 | 跟著采綾作伙去遊覽</title>
+    <style>
+        :root {
+            --bg-color: #F5B1AA;
+            --banner-pink: #F5B1AA;
+            --yarn-pink: #EAC8C1;
+            --text-main: #333333;
+            --text-header: #4A403D;
+            --heart-red: #D0776B;
+            --border: rgba(0,0,0,0.05);
+            --cancel-grey: #757575;
+        }
+
+        * { box-sizing: border-box; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
+        body { margin: 0; background-color: var(--bg-color); color: var(--text-main); overflow-x: hidden; padding-top: 140px; }
+
+        #watermark { position: fixed; top: 20px; right: 20px; z-index: 50; display: flex; align-items: center; gap: 8px; pointer-events: none; opacity: 0.15; }
+        .wm-logo { font-size: 24px; }
+        .wm-text { font-size: 11px; letter-spacing: 3px; font-weight: bold; color: var(--text-header); text-transform: uppercase; }
+
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 120px;
+            background-color: var(--banner-pink); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; transition: box-shadow 0.4s ease;
+        }
+        header.scrolled { box-shadow: 0 10px 40px rgba(208, 119, 107, 0.25); }
+        .banner-img { max-width: 100%; max-height: 100px; object-fit: contain; }
+
+        .filter-bar {
+            max-width: 1400px; margin: 0 auto 10px auto; padding: 0 20px;
+            display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap;
+        }
+        .filter-group { display: flex; align-items: center; gap: 8px; flex-grow: 1; min-width: 280px; }
+        .filter-label { font-weight: bold; color: var(--text-header); }
+        .search-wrapper { position: relative; flex-grow: 1; display: flex; align-items: center; }
+        #search-input {
+            width: 100%; padding: 10px 40px 10px 15px; border-radius: 8px; border: 1px solid var(--yarn-pink);
+            outline: none; transition: 0.3s; font-size: 14px;
+        }
+        #search-input:focus { border-color: var(--heart-red); box-shadow: 0 0 8px rgba(208, 119, 107, 0.2); }
+        #clear-search { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border: none; border-radius: 50%; background: transparent; color: #bbb; font-size: 18px; cursor: pointer; display: none; user-select: none; }
+        #clear-search:hover { color: var(--heart-red); }
+
+        .search-count-box { max-width: 1400px; margin: 0 auto 15px auto; padding: 0 20px; font-size: 13px; color: var(--text-header); font-weight: bold; }
+        #sort-select { padding: 9px 12px; border-radius: 8px; border: 1px solid var(--yarn-pink); background-color: white; color: var(--text-main); font-size: 14px; cursor: pointer; outline: none; }
+        #sort-select option.cancel-option { color: #999 !important; background-color: #f9f9f9; }
+
+        .container { max-width: 1400px; margin: 0 auto 30px auto; padding: 0 20px; }
+        .section-title { font-size: 20px; font-weight: bold; color: var(--text-header); margin: 20px 0 15px 0; display: flex; align-items: center; gap: 8px; }
+        .tour-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px; }
+
+        .tour-card {
+            background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.04);
+            display: flex; flex-direction: column; transition: transform 0.3s; border: 1px solid var(--border); position: relative;
+        }
+        .tour-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .tour-img { width: 100%; aspect-ratio: 210 / 297; background-color: #eee; background-size: cover; background-position: center; }
+        .tour-info { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+        .tour-title { font-size: 16px; font-weight: bold; margin: 0 0 10px 0; color: var(--text-header); line-height: 1.4; height: 44px; overflow: hidden; }
+        .tour-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 15px; }
+        .tour-date { color: #555; font-size: 12px; font-weight: bold; background: #fff; padding: 5px 10px; border-radius: 4px; border: 1px solid #ddd; }
+        .seat-badge { font-size: 11px; font-weight: bold; padding: 5px 8px; border-radius: 4px; }
+        .seat-plenty { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .seat-few { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; animation: pulse 2s infinite; }
+        .seat-full { background: #eeeeee; color: #757575; border: 1px solid #e0e0e0; }
+        .price-wrap { display: flex; align-items: baseline; margin: auto 0 15px 0; }
+        .tour-price { font-size: 24px; color: var(--heart-red); font-weight: bold; }
+        .tour-price.cancelled { color: #999; text-decoration: line-through; }
+        .cancel-label { background: var(--cancel-grey); color: white; font-size: 11px; font-weight: bold; padding: 3px 6px; border-radius: 4px; margin-left: 8px; }
+        .btn-book { width: 100%; padding: 12px; background: var(--heart-red); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-book:disabled { background: #ccc; cursor: not-allowed; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-radius: 20px; width: 95%; max-width: 600px; height: 90vh; position: relative; display: flex; flex-direction: column; overflow: hidden; color: var(--text-main); }
+        .modal-header { padding: 20px 25px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        .close-btn { font-size: 32px; cursor: pointer; color: #bbb; line-height: 1; background: transparent; border: none; }
+        .iframe-container { flex-grow: 1; width: 100%; overflow-y: auto; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .reminder { background: #fff; padding: 15px 25px; font-size: 14px; font-weight: bold; text-align: center; border-bottom: 1px dashed var(--yarn-pink); }
+
+        .contact-btn-fixed {
+            position: fixed; bottom: 30px; right: 30px; z-index: 1500;
+            padding: 12px 25px; background: var(--heart-red); color: white;
+            border: 2px solid white; border-radius: 50px; font-weight: bold;
+            font-size: 15px; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: 0.3s; display: flex; align-items: center; gap: 8px;
+        }
+        .contact-btn-fixed:hover { background: #b06258; transform: translateY(-3px) scale(1.05); }
+        .contact-modal {
+            background: white; padding: 35px 25px; border-radius: 25px;
+            width: 90%; max-width: 360px; position: relative; text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 28px; color: #ccc; cursor: pointer; background: transparent; border: none; }
+        .qr-code { width: 200px; height: 200px; background: #f9f9f9; margin: 15px auto; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .qr-code img { width: 100%; height: auto; }
+        .tel-btn { display: block; background: #5CB85C; color: white; text-decoration: none; padding: 15px; border-radius: 12px; font-weight: bold; margin-top: 20px; font-size: 16px; transition: 0.3s; }
+        .tel-btn:hover { background: #4cae4c; }
+    </style>
+</head>
+<body>
+
+    <div id="watermark"><span class="wm-logo">🧶</span><span class="wm-text">采綾遊覽團</span></div>
+
+    <header id="main-header" role="banner">
+        <img src="banner.png" alt="采綾遊覽團 Banner" class="banner-img">
+    </header>
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label class="filter-label" for="search-input">🔍 搜尋：</label>
+            <div class="search-wrapper">
+                <input type="text" id="search-input" placeholder="輸入關鍵字..." aria-label="搜尋行程" oninput="handleSearch()">
+                <button type="button" id="clear-search" class="clear-search" aria-label="清除搜尋文字">&times;</button>
+            </div>
+        </div>
+        <div class="filter-group" style="justify-content: flex-end;">
+            <select id="sort-select" onchange="handleSort()" aria-label="排序行程">
+                <option value="default">預設排序</option>
+                <option value="date-asc">日期 (由近到遠)</option>
+                <option value="date-desc">日期 (由遠到近)</option>
+                <option value="price-asc">價格 (由低到高)</option>
+                <option value="price-desc">價格 (由高到低)</option>
+                <option value="seat-asc">尚餘人數 (由少到多)</option>
+                <option value="seat-desc">尚餘人數 (由多到少)</option>
+                <option value="status">行程狀態 (優先顯示報名中)</option>
+                <option value="cancelled-first" class="cancel-option">行程狀態 (已取消)</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="search-count-info" class="search-count-box" role="status" aria-live="polite"></div>
+
+    <div class="container">
+        <div id="popular-section-wrapper" style="display:none;">
+            <div class="section-title">🔥 熱門推薦 (報名最踴躍)</div>
+            <div id="popular-grid" class="tour-grid"></div>
+            <hr style="border: 0; border-top: 1px solid var(--yarn-pink); margin-bottom: 30px; opacity: 0.3;">
+        </div>
+
+        <div class="section-title">🌟 全部行程</div>
+        <div id="tour-grid" class="tour-grid"></div>
+    </div>
+
+    <button type="button" class="contact-btn-fixed" onclick="openContact()">💬 聯繫采綾</button>
+
+    <div class="modal-overlay" id="contactModal" onclick="closeContact(event)" aria-hidden="true">
+        <div class="contact-modal" role="dialog" aria-modal="true" aria-labelledby="contact-title" onclick="event.stopPropagation()">
+            <button type="button" class="close-modal" onclick="closeContact()" aria-label="關閉聯絡視窗">&times;</button>
+            <h2 id="contact-title" style="margin: 0 0 10px 0; font-size: 20px;">聯繫采綾</h2>
+            <p style="font-size: 14px; color: #888;">掃描 QR Code 加入好友</p>
+            <div class="qr-code">
+                <img src="你的LINE_QR網址" alt="LINE 聯絡 QR Code">
+            </div>
+            <p style="margin: 10px 0; font-weight: bold;">LINE ID：你的ID</p>
+            <hr style="border: 0; border-top: 1px dashed #eee; margin: 20px 0;">
+            <p style="font-size: 14px; margin-bottom: 5px; color: #888;">服務專線</p>
+            <p style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">0907-317-133</p>
+            <a href="tel:0907317133" class="tel-btn">📞 直接撥打電話</a>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="bookingModal" onclick="closeModal(event)" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="booking-title" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="booking-title" style="margin:0; font-size: 18px;">填寫報名資料</h2>
+                <button type="button" class="close-btn" onclick="closeModal()" aria-label="關閉報名視窗">&times;</button>
+            </div>
+            <div class="reminder">✅ 已選擇：<span id="modal-tour-name" style="color:var(--heart-red); font-size: 16px;"></span></div>
+            <div class="iframe-container"><iframe id="booking-frame" src="" title="報名表單"></iframe></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwqsFuNtiTUWI8C5W_bsFpTkBwT-b9GwExcd_v2ayaUPDjGUBUy2rd5JSZ_tzjebsuaTA/exec';
+        let cachedTours = [];
+        let currentSearchTerm = '';
+
+        const grid = document.getElementById('tour-grid');
+        const popularGrid = document.getElementById('popular-grid');
+        const popularWrapper = document.getElementById('popular-section-wrapper');
+        const countInfo = document.getElementById('search-count-info');
+        const bookingModal = document.getElementById('bookingModal');
+        const bookingFrame = document.getElementById('booking-frame');
+        const searchInput = document.getElementById('search-input');
+        const clearBtn = document.getElementById('clear-search');
+        const contactModal = document.getElementById('contactModal');
+
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('main-header');
+            window.scrollY > 10 ? header.classList.add('scrolled') : header.classList.remove('scrolled');
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                if (bookingModal.style.display === 'flex') closeModal();
+                if (contactModal.style.display === 'flex') closeContact();
+            }
+        });
+
+        clearBtn.addEventListener('click', clearSearch);
+
+        grid.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 50px; color: #888; font-weight: bold;">📡 正在連線後台...</div>';
+
+        fetch(API_URL)
+            .then(response => response.json())
+            .then(tours => {
+                cachedTours = Array.isArray(tours) ? tours : [];
+                renderPopular(cachedTours);
+                updateDisplay();
+            })
+            .catch(() => {
+                countInfo.innerText = '❌ 資料讀取失敗，請稍後再試。';
+                grid.innerHTML = '<div style="text-align:center; grid-column: 1/-1; color: red;">資料讀取失敗。</div>';
+            });
+
+        function renderPopular(tours) {
+            const popularData = [...tours]
+                .filter(t => t.cancel !== '是')
+                .sort((a, b) => (parseInt(b.booked, 10) || 0) - (parseInt(a.booked, 10) || 0))
+                .slice(0, 3);
+
+            if (popularData.length > 0) {
+                popularWrapper.style.display = 'block';
+                popularGrid.innerHTML = '';
+                popularData.forEach(tour => popularGrid.appendChild(createCard(tour)));
+            }
+        }
+
+        function handleSearch() {
+            currentSearchTerm = searchInput.value.trim().toLowerCase();
+            clearBtn.style.display = currentSearchTerm ? 'block' : 'none';
+            updateDisplay();
+        }
+
+        function clearSearch() {
+            searchInput.value = '';
+            currentSearchTerm = '';
+            clearBtn.style.display = 'none';
+            updateDisplay();
+        }
+
+        function handleSort() {
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            let filteredData = cachedTours.filter(tour => tour.title.toLowerCase().includes(currentSearchTerm));
+            countInfo.innerText = currentSearchTerm
+                ? `✨ 搜尋「${currentSearchTerm}」，共找到 ${filteredData.length} 個行程`
+                : `目前共有 ${filteredData.length} 個行程供您選擇`;
+
+            const sortType = document.getElementById('sort-select').value;
+            switch (sortType) {
+                case 'date-asc': filteredData.sort((a, b) => a.date.localeCompare(b.date)); break;
+                case 'date-desc': filteredData.sort((a, b) => b.date.localeCompare(a.date)); break;
+                case 'price-asc': filteredData.sort((a, b) => parsePrice(a.price) - parsePrice(b.price)); break;
+                case 'price-desc': filteredData.sort((a, b) => parsePrice(b.price) - parsePrice(a.price)); break;
+                case 'seat-asc': filteredData.sort((a, b) => getRemaining(a) - getRemaining(b)); break;
+                case 'seat-desc': filteredData.sort((a, b) => getRemaining(b) - getRemaining(a)); break;
+                case 'status': filteredData.sort((a, b) => getStatusWeight(a) - getStatusWeight(b)); break;
+                case 'cancelled-first': filteredData.sort((a, b) => (a.cancel === '是' ? 0 : 1) - (b.cancel === '是' ? 0 : 1)); break;
+            }
+
+            grid.innerHTML = '';
+            if (filteredData.length === 0) {
+                grid.innerHTML = `<div style="text-align:center; grid-column: 1/-1; padding: 50px;">🔍 找不到相關行程！</div>`;
+            } else {
+                filteredData.forEach(tour => grid.appendChild(createCard(tour)));
+            }
+        }
+
+        function createCard(tour) {
+            const card = document.createElement('div');
+            card.className = 'tour-card';
+
+            const imgUrl = tour.img || 'https://drive.google.com/thumbnail?id=1JP4GeRN1CNZ-l3xox1xkbu55IZcZgNmF&sz=w1000';
+            const imgDiv = document.createElement('div');
+            imgDiv.className = 'tour-img';
+            imgDiv.style.backgroundImage = `url('${imgUrl}')`;
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'tour-info';
+            const remaining = getRemaining(tour);
+            const isCancelled = tour.cancel === '是';
+
+            let seatHtml = '';
+            let priceHtml = '';
+            const buttonElement = document.createElement('button');
+            buttonElement.type = 'button';
+            buttonElement.className = 'btn-book';
+
+            if (isCancelled) {
+                seatHtml = `<span class="seat-badge seat-full">行程取消</span>`;
+                priceHtml = `<div class="price-wrap"><div class="tour-price cancelled">${tour.price} <span style="font-size:13px;color:#888;">/人</span></div><span class="cancel-label">已取消</span></div>`;
+                buttonElement.textContent = '本團已取消';
+                buttonElement.disabled = true;
+            } else {
+                const badgeClass = remaining > 5 ? 'seat-plenty' : remaining > 0 ? 'seat-few' : 'seat-full';
+                const badgeText = remaining > 5 ? `尚餘 ${remaining} 位` : remaining > 0 ? `🔥 剩 ${remaining} 位` : '已額滿';
+                seatHtml = `<span class="seat-badge ${badgeClass}">${badgeText}</span>`;
+                priceHtml = `<div class="price-wrap"><div class="tour-price">${tour.price} <span style="font-size:13px;color:#888;">/人</span></div></div>`;
+
+                if (remaining > 0) {
+                    buttonElement.textContent = '點此報名';
+                    buttonElement.addEventListener('click', () => openModal(tour.title, tour.date));
+                } else {
+                    buttonElement.textContent = '本團已額滿';
+                    buttonElement.disabled = true;
+                }
+            }
+
+            infoDiv.innerHTML = `
+                <h2 class="tour-title">${tour.title}</h2>
+                <div class="tour-meta">
+                    <span class="tour-date">📅 ${tour.date}</span>
+                    ${seatHtml}
+                </div>
+                ${priceHtml}
+            `;
+            infoDiv.appendChild(buttonElement);
+
+            card.appendChild(imgDiv);
+            card.appendChild(infoDiv);
+            return card;
+        }
+
+        function parsePrice(s) {
+            return Number.parseFloat(String(s).replace(/[^\d.]/g, '')) || 0;
+        }
+
+        function getRemaining(t) {
+            const total = Number.parseInt(t.total, 10);
+            const booked = Number.parseInt(t.booked, 10);
+            const safeTotal = Number.isFinite(total) && total > 0 ? total : 40;
+            const safeBooked = Number.isFinite(booked) && booked >= 0 ? booked : 0;
+            return Math.max(0, safeTotal - safeBooked);
+        }
+
+        function getStatusWeight(t) {
+            return t.cancel === '是' ? 2 : getRemaining(t) > 0 ? 0 : 1;
+        }
+
+        function openModal(title, date) {
+            document.getElementById('modal-tour-name').innerText = `${title} (${date})`;
+            bookingFrame.src = `https://docs.google.com/forms/d/e/1FAIpQLSfN4MSf6AzXIH3ftQ0G_b1W9tl_PuYj9KhHmulDaJLmQTBdOA/viewform?embedded=true&entry.1831919985=${encodeURIComponent(title)}`;
+            bookingModal.style.display = 'flex';
+            bookingModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== bookingModal) return;
+            bookingModal.style.display = 'none';
+            bookingModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+            bookingFrame.src = '';
+        }
+
+        function openContact() {
+            contactModal.style.display = 'flex';
+            contactModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeContact(event) {
+            if (event && event.target !== contactModal) return;
+            contactModal.style.display = 'none';
+            contactModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+</body>
+</html>
