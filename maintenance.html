@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>采綾遊覽團 | 系統維護中</title>
+    <style>
+        :root {
+            --bg-color: #F5B1AA; 
+            --text-header: #4A403D; 
+            --heart-red: #D0776B; 
+            --white: rgba(255, 255, 255, 0.9);
+            --line-green: #06C755;
+        }
+
+        * { box-sizing: border-box; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
+        
+        body { 
+            margin: 0; 
+            background-color: var(--bg-color); 
+            height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            text-align: center;
+            color: var(--text-header);
+            overflow: hidden; /* 防止背景捲動 */
+        }
+
+        .maintenance-container {
+            background: var(--white);
+            padding: 50px 30px;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255,255,255,0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.7; }
+        }
+
+        h1 { margin: 10px 0; font-size: 24px; letter-spacing: 2px; }
+        p { line-height: 1.6; font-size: 16px; color: #666; }
+
+        .loading-bar {
+            width: 100px;
+            height: 4px;
+            background: #eee;
+            margin: 30px auto;
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading-bar::after {
+            content: '';
+            position: absolute;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--heart-red);
+            animation: loading 2s linear infinite;
+        }
+
+        @keyframes loading {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .contact-info {
+            margin-top: 30px;
+            font-size: 13px;
+            border-top: 1px dashed #ccc;
+            padding-top: 20px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: var(--heart-red);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 15px;
+            transition: 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+        .back-btn:hover { background: #b06258; transform: translateY(-3px); }
+
+        /* 🌟 聯繫彈窗樣式 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none; /* 預設隱藏 */
+            justify-content: center; align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+        .contact-modal {
+            background: white;
+            padding: 35px 25px;
+            border-radius: 25px;
+            width: 90%;
+            max-width: 360px;
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+        .close-modal {
+            position: absolute; top: 15px; right: 20px;
+            font-size: 28px; color: #ccc; cursor: pointer;
+        }
+        .qr-code {
+            width: 200px; height: 200px;
+            background: #f9f9f9;
+            margin: 15px auto;
+            border: 1px solid #eee;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .qr-code img { max-width: 100%; height: auto; }
+
+        .tel-btn {
+            display: block;
+            background: #5CB85C;
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .tel-btn:hover { background: #4cae4c; }
+    </style>
+</head>
+<body>
+
+    <div class="maintenance-container">
+        <div class="icon">🧶</div>
+        <h1>跟著采綾作伙去遊覽 · 升級中</h1>
+        <p>為了提供更順暢的報名體驗，<br>采綾正在細心編織更完美的網頁空間。</p>
+        
+        <div class="loading-bar"></div>
+
+        <p style="font-size: 14px;">預計很快就會與大家見面！</p>
+
+        <div class="contact-info">
+            如有急事，請洽詢采綾官方 LINE 或致電專人服務。<br>
+            感謝您的耐心等待 🚌
+        </div>
+        
+        <button class="back-btn" onclick="openContact()">聯繫采綾</button>
+    </div>
+
+    <div class="modal-overlay" id="contactModal" onclick="closeContact(event)">
+        <div class="contact-modal" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeContact()">&times;</span>
+            
+            <h2 style="margin: 0 0 10px 0; font-size: 20px;">聯繫采綾</h2>
+            <p style="font-size: 14px; color: #888;">掃描 QR Code 加入好友</p>
+
+            <div class="qr-code">
+                <img src="你的LINE_QR網址" alt="LINE QR Code">
+            </div>
+
+            <p style="margin: 10px 0; font-weight: bold;">LINE ID：你的ID</p>
+            
+            <hr style="border: 0; border-top: 1px dashed #eee; margin: 20px 0;">
+            
+            <p style="font-size: 14px; margin-bottom: 5px; color: #888;">服務專線</p>
+            <p style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">0907-317-133</p>
+
+            <a href="tel:0907317133" class="tel-btn">📞 直接撥打電話</a>
+        </div>
+    </div>
+
+    <script>
+        function openContact() {
+            document.getElementById('contactModal').style.display = 'flex';
+        }
+
+        function closeContact(event) {
+            // 如果是點擊背景或叉叉，就關閉
+            document.getElementById('contactModal').style.display = 'none';
+        }
+    </script>
+
+</body>
+</html>
